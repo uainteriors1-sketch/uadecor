@@ -50,9 +50,9 @@
 - Uski copy banao, naam rakho `.env`
 - Fill karo:
 ```
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-VITE_ADMIN_EMAIL=datta@uainteriors.in
+VITE_SUPABASE_URL=https://imzbcfaymiftszhlntnu.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImltemJjZmF5bWlmdHN6aGxudG51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MTY1MDksImV4cCI6MjA5ODM5MjUwOX0.GoCFEuNMFQGxLSiFf8akmfKK9uthcIvAEWVMHg1wL8s
+VITE_ADMIN_EMAIL=uainteriors1@gmail.com
 ```
 
 ### 2.3 WhatsApp Number Update Karo

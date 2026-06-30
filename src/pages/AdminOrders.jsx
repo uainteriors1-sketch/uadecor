@@ -26,6 +26,10 @@ export default function AdminOrders() {
   const [filterStatus, setFilter] = useState('all')
 
   const load = async () => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
     const [{ data: ord }, { data: prod }] = await Promise.all([
       supabase.from('orders').select('*').order('created_at', { ascending: false }),
       supabase.from('products').select('id,name,price').eq('is_available', true)
@@ -114,7 +118,7 @@ export default function AdminOrders() {
   const preview = form.unit_price ? calcPricing(form.unit_price, form.quantity, form.gst_percent) : null
 
   return (
-    <div style={{ maxWidth:480, margin:'0 auto', padding:14 }}>
+    <div style={{ maxWidth:980, margin:'0 auto', padding:'18px 16px 28px', width:'100%' }}>
 
       {msg && (
         <div style={{ background:'#0D1F15', border:'1px solid #2E6B4F', borderRadius:10, padding:'9px 13px', marginBottom:12, fontSize:12, color:'#7CB87A' }}>{msg}</div>
@@ -124,37 +128,38 @@ export default function AdminOrders() {
       {view === 'list' && (
         <>
           {/* Stats */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,minmax(0,1fr))', gap:10, marginBottom:16 }}>
             {[
               { l:'Active Orders', v:stats.active, c:G.gold },
               { l:'Orders Today', v:stats.today, c:'#2C4A7C' },
               { l:'Revenue (Completed)', v:`₹${stats.revenue.toLocaleString('en-IN')}`, c:G.green },
               { l:'Balance Pending', v:`₹${stats.pending.toLocaleString('en-IN')}`, c:'#AA4444' },
             ].map((s,i) => (
-              <div key={i} style={{ background:G.card, borderRadius:10, padding:'10px 12px', border:`1px solid ${s.c}33` }}>
-                <div style={{ fontSize:10, color:G.muted, marginBottom:3 }}>{s.l}</div>
-                <div style={{ fontSize:17, fontWeight:800, color:s.c }}>{s.v}</div>
+              <div key={i} style={{ background:'linear-gradient(135deg, rgba(20,20,20,0.95), rgba(12,12,12,0.95))', borderRadius:14, padding:'14px 12px', border:`1px solid ${s.c}33`, boxShadow:'0 8px 24px rgba(0,0,0,0.22)' }}>
+                <div style={{ fontSize:11, color:G.muted, marginBottom:4 }}>{s.l}</div>
+                <div style={{ fontSize:20, fontWeight:900, color:s.c }}>{s.v}</div>
               </div>
             ))}
           </div>
 
           {/* New order button */}
           <button onClick={() => { setForm(BLANK_ORDER); setView('new') }}
-            style={{ width:'100%', padding:11, borderRadius:10, border:`1px solid ${G.gold}`, background:`${G.gold}22`, color:G.gold, fontSize:13, fontWeight:700, cursor:'pointer', marginBottom:14 }}>
+            style={{ width:'100%', padding:'12px 14px', borderRadius:12, border:`1px solid ${G.gold}`, background:`${G.gold}22`, color:G.gold, fontSize:15, fontWeight:800, cursor:'pointer', marginBottom:16 }}>
             ➕ New Order
           </button>
 
           {/* Status filter */}
-          <div style={{ display:'flex', gap:6, overflowX:'auto', marginBottom:14, scrollbarWidth:'none' }}>
+          <div style={{ display:'flex', gap:8, overflowX:'auto', marginBottom:16, scrollbarWidth:'none', paddingBottom:4 }}>
             {[['all','All'], ...Object.entries(STATUS).map(([k,v]) => [k, v.label])].map(([k,l]) => (
               <button key={k} onClick={() => setFilter(k)}
-                style={{ flexShrink:0, padding:'4px 9px', borderRadius:16, border:`1px solid ${filterStatus===k ? G.gold : G.border}`, background: filterStatus===k ? `${G.gold}22` : G.card, color: filterStatus===k ? G.gold : G.muted, fontSize:9, cursor:'pointer', whiteSpace:'nowrap' }}>
+                style={{ flexShrink:0, padding:'6px 12px', borderRadius:999, border:`1px solid ${filterStatus===k ? G.gold : G.border}`, background: filterStatus===k ? `${G.gold}22` : G.card, color: filterStatus===k ? G.gold : G.muted, fontSize:12, cursor:'pointer', whiteSpace:'nowrap' }}>
                 {l}
               </button>
             ))}
           </div>
 
           {loading && <div style={{ color:G.muted, textAlign:'center', padding:30 }}>Loading orders...</div>}
+          {!loading && !supabase && <div style={{ color:G.muted, textAlign:'center', padding:30 }}>Supabase is not configured. Connect your environment values to use the admin panel.</div>}
           {!loading && filtered.length === 0 && (
             <div style={{ color:G.muted, textAlign:'center', padding:40, fontSize:13 }}>
               {filterStatus === 'all' ? 'No orders yet. Create your first order!' : `No ${STATUS[filterStatus]?.label} orders`}
@@ -165,20 +170,20 @@ export default function AdminOrders() {
             const st = STATUS[o.status] || STATUS.received
             return (
               <div key={o.id} onClick={() => { setSelected(o); setView('detail') }}
-                style={{ background:G.card, borderRadius:12, padding:'12px 14px', marginBottom:8, border:`1px solid ${G.border}`, cursor:'pointer', transition:'border-color 0.2s' }}
+                style={{ background:'linear-gradient(135deg, rgba(20,20,20,0.95), rgba(12,12,12,0.95))', borderRadius:16, padding:'14px 15px', marginBottom:10, border:`1px solid ${G.border}`, cursor:'pointer', transition:'border-color 0.2s', boxShadow:'0 8px 24px rgba(0,0,0,0.22)' }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = G.gold}
                 onMouseLeave={e => e.currentTarget.style.borderColor = G.border}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
                   <div>
-                    <div style={{ fontSize:12, fontWeight:700 }}>{o.client_name}</div>
-                    <div style={{ fontSize:10, color:G.muted }}>{o.order_number} • {o.product_name}</div>
+                    <div style={{ fontSize:15, fontWeight:800 }}>{o.client_name}</div>
+                    <div style={{ fontSize:12, color:G.muted, marginTop:3, fontWeight:600 }}>{o.order_number} • {o.product_name}</div>
                   </div>
                   <div style={{ textAlign:'right' }}>
-                    <div style={{ fontSize:11, fontWeight:700, color:G.gold }}>₹{(o.total_amount||0).toLocaleString('en-IN')}</div>
-                    <div style={{ fontSize:8, color:'#fff', background:st.color, padding:'2px 6px', borderRadius:8, marginTop:3 }}>{st.label}</div>
+                    <div style={{ fontSize:14, fontWeight:800, color:G.gold }}>₹{(o.total_amount||0).toLocaleString('en-IN')}</div>
+                    <div style={{ fontSize:10, color:'#fff', background:st.color, padding:'3px 7px', borderRadius:999, marginTop:4 }}>{st.label}</div>
                   </div>
                 </div>
-                <div style={{ display:'flex', gap:10, fontSize:10, color:G.muted }}>
+                <div style={{ display:'flex', gap:10, fontSize:11, color:G.muted, flexWrap:'wrap', marginTop:6 }}>
                   <span>{o.advance_paid ? '✅ Adv' : '⏳ Adv'}</span>
                   <span>{o.balance_paid ? '✅ Bal' : '⏳ Bal'}</span>
                   {o.tracking_number && <span>📦 {o.tracking_number}</span>}
@@ -193,13 +198,13 @@ export default function AdminOrders() {
       {/* ── NEW ORDER FORM ── */}
       {view === 'new' && (
         <>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-            <div style={{ fontSize:15, fontWeight:700 }}>➕ New Order</div>
-            <button onClick={() => setView('list')} style={{ background:'none', border:'none', color:G.muted, fontSize:11, cursor:'pointer' }}>← Back</button>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+            <div style={{ fontSize:18, fontWeight:800 }}>➕ New Order</div>
+            <button onClick={() => setView('list')} style={{ background:'none', border:'none', color:G.muted, fontSize:13, cursor:'pointer' }}>← Back</button>
           </div>
 
           {/* Client */}
-          <div style={{ fontSize:10, color:G.gold, fontWeight:700, letterSpacing:1.5, marginBottom:10 }}>CLIENT INFO</div>
+          <div style={{ fontSize:12, color:G.gold, fontWeight:700, letterSpacing:1.5, marginBottom:10 }}>CLIENT INFO</div>
           {[
             { l:'Client Name *', k:'client_name', ph:'e.g. Rajesh Shah', type:'text' },
             { l:'Phone *', k:'client_phone', ph:'9XXXXXXXXX', type:'tel' },
@@ -214,16 +219,16 @@ export default function AdminOrders() {
           ))}
 
           {/* Product */}
-          <div style={{ fontSize:10, color:G.gold, fontWeight:700, letterSpacing:1.5, marginBottom:10, marginTop:16 }}>PRODUCT INFO</div>
+          <div style={{ fontSize:12, color:G.gold, fontWeight:700, letterSpacing:1.5, marginBottom:10, marginTop:18 }}>PRODUCT INFO</div>
 
           {/* Quick pick from catalogue */}
           {products.length > 0 && (
-            <div style={{ marginBottom:10 }}>
-              <div style={{ fontSize:10, color:G.muted, marginBottom:5 }}>Quick Pick from Catalogue</div>
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>Quick Pick from Catalogue</div>
               <select onChange={e => {
                 const p = products.find(x => x.id === e.target.value)
                 if (p) setForm({...form, product_name:p.name})
-              }} style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'9px 12px', color:G.text, fontSize:12, outline:'none', boxSizing:'border-box' }}>
+              }} style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:14, outline:'none', boxSizing:'border-box' }}>
                 <option value=''>— Select product —</option>
                 {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.price})</option>)}
               </select>
@@ -245,8 +250,8 @@ export default function AdminOrders() {
 
           {/* Live pricing preview */}
           {preview && (
-            <div style={{ background:'#1A1000', borderRadius:10, padding:12, marginBottom:14, border:`1px solid ${G.gold}44` }}>
-              <div style={{ fontSize:10, color:G.gold, fontWeight:700, marginBottom:8 }}>PRICING PREVIEW</div>
+            <div style={{ background:'#1A1000', borderRadius:12, padding:14, marginBottom:16, border:`1px solid ${G.gold}44` }}>
+              <div style={{ fontSize:12, color:G.gold, fontWeight:700, marginBottom:8 }}>PRICING PREVIEW</div>
               {[
                 { l:'Subtotal', v:`₹${preview.subtotal.toLocaleString('en-IN')}` },
                 { l:`GST (${form.gst_percent}%)`, v:`₹${preview.gst.toLocaleString('en-IN')}` },
@@ -263,29 +268,29 @@ export default function AdminOrders() {
           )}
 
           {/* Supplier + notes */}
-          <div style={{ fontSize:10, color:G.gold, fontWeight:700, letterSpacing:1.5, marginBottom:10, marginTop:4 }}>SUPPLIER INFO</div>
+          <div style={{ fontSize:12, color:G.gold, fontWeight:700, letterSpacing:1.5, marginBottom:10, marginTop:6 }}>SUPPLIER INFO</div>
           {[
             { l:'Supplier Name', k:'supplier_name', ph:'e.g. Magicdecor.in', type:'text' },
             { l:'Expected Delivery Date', k:'expected_delivery', ph:'', type:'date' },
           ].map(f => (
-            <div key={f.k} style={{ marginBottom:10 }}>
-              <div style={{ fontSize:10, color:G.muted, marginBottom:4 }}>{f.l}</div>
+            <div key={f.k} style={{ marginBottom:12 }}>
+              <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>{f.l}</div>
               <input type={f.type} value={form[f.k]} onChange={e => setForm({...form,[f.k]:e.target.value})}
                 placeholder={f.ph}
-                style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'9px 12px', color:G.text, fontSize:12, outline:'none', boxSizing:'border-box' }} />
+                style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:14, outline:'none', boxSizing:'border-box' }} />
             </div>
           ))}
 
           <div style={{ marginBottom:16 }}>
-            <div style={{ fontSize:10, color:G.muted, marginBottom:4 }}>Notes</div>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>Notes</div>
             <textarea value={form.notes} onChange={e => setForm({...form,notes:e.target.value})}
               placeholder="Client requirements, special instructions..."
-              rows={2}
-              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'9px 12px', color:G.text, fontSize:12, outline:'none', resize:'none', boxSizing:'border-box' }} />
+              rows={3}
+              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:14, outline:'none', resize:'vertical', boxSizing:'border-box' }} />
           </div>
 
           <button onClick={createOrder} disabled={saving || !form.client_name || !form.client_phone || !form.product_name || !form.unit_price}
-            style={{ width:'100%', padding:12, borderRadius:10, border:'none', background: (form.client_name && form.client_phone && form.product_name && form.unit_price) ? G.gold : G.card, color: (form.client_name && form.client_phone && form.product_name && form.unit_price) ? '#000' : G.muted, fontSize:13, fontWeight:800, cursor:'pointer' }}>
+            style={{ width:'100%', padding:'13px 14px', borderRadius:12, border:'none', background: (form.client_name && form.client_phone && form.product_name && form.unit_price) ? G.gold : G.card, color: (form.client_name && form.client_phone && form.product_name && form.unit_price) ? '#000' : G.muted, fontSize:15, fontWeight:900, cursor:'pointer' }}>
             {saving ? 'Creating...' : '✅ Create Order'}
           </button>
         </>
@@ -300,24 +305,24 @@ export default function AdminOrders() {
 
         return (
           <>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, gap:12 }}>
               <div>
-                <div style={{ fontSize:9, color:G.muted }}>{selected.order_number}</div>
-                <div style={{ fontSize:16, fontWeight:800 }}>{selected.client_name}</div>
+                <div style={{ fontSize:11, color:G.muted }}>{selected.order_number}</div>
+                <div style={{ fontSize:19, fontWeight:800 }}>{selected.client_name}</div>
               </div>
-              <button onClick={() => setView('list')} style={{ background:'none', border:'none', color:G.muted, fontSize:11, cursor:'pointer' }}>← Back</button>
+              <button onClick={() => setView('list')} style={{ background:'none', border:'none', color:G.muted, fontSize:13, cursor:'pointer' }}>← Back</button>
             </div>
 
             {/* Status banner */}
             <div style={{ background:`${st.color}22`, border:`1px solid ${st.color}66`, borderRadius:12, padding:'12px 14px', marginBottom:12 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
                 <div>
-                  <div style={{ fontSize:9, color:G.muted, marginBottom:2 }}>CURRENT STATUS</div>
-                  <div style={{ fontSize:15, fontWeight:800, color:st.color }}>{st.label}</div>
+                  <div style={{ fontSize:11, color:G.muted, marginBottom:2 }}>CURRENT STATUS</div>
+                  <div style={{ fontSize:16, fontWeight:800, color:st.color }}>{st.label}</div>
                 </div>
                 {nextSt && (
                   <button onClick={() => advanceStatus(selected)}
-                    style={{ padding:'9px 14px', borderRadius:10, border:`1px solid ${nextSt.color}`, background:`${nextSt.color}22`, color:nextSt.color, fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                    style={{ padding:'10px 14px', borderRadius:10, border:`1px solid ${nextSt.color}`, background:`${nextSt.color}22`, color:nextSt.color, fontSize:13, fontWeight:700, cursor:'pointer' }}>
                     → {nextSt.label}
                   </button>
                 )}

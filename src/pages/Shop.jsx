@@ -14,6 +14,11 @@ export default function Shop() {
   const [expanded, setExpanded] = useState(null)
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     (async () => {
       const { data, error } = await supabase
         .from('products')
@@ -39,14 +44,14 @@ export default function Shop() {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14, gap:12 }}>
           <div>
             <div className="hero-chip" style={{ marginBottom:8 }}>Curated Luxury Decor</div>
-            <div style={{ fontSize:28, fontWeight:800, letterSpacing:-0.5 }}>UA Interiors</div>
-            <div style={{ fontSize:13, color:G.muted, marginTop:4 }}>Mumbai & Palghar Delivery 🚚 • Premium home styling</div>
+            <div style={{ fontSize:28, fontWeight:900, letterSpacing:-0.5 }}>UA Interiors</div>
+            <div style={{ fontSize:13, color:G.muted, marginTop:4, fontWeight:600 }}>Mumbai & Palghar Delivery 🚚 • Premium home styling</div>
           </div>
           <div style={{ textAlign:'right', minWidth:120 }}>
             <a href={`https://wa.me/${WA_NUMBER}?text=Hi UA Interiors, I want to see your catalogue`}
                target="_blank" rel="noreferrer"
                className="premium-button"
-               style={{ display:'block', textDecoration:'none', background:'linear-gradient(135deg, #2E6B4F, #1F4A36)', color:'#fff', padding:'10px 14px', borderRadius:12, fontSize:13, fontWeight:700 }}>
+               style={{ display:'block', textDecoration:'none', background:'linear-gradient(135deg, #2E6B4F, #1F4A36)', color:'#fff', padding:'10px 14px', borderRadius:12, fontSize:13, fontWeight:800 }}>
               💬 WhatsApp
             </a>
             {newCount > 0 && (
@@ -78,6 +83,10 @@ export default function Shop() {
           <div style={{ textAlign:'center', padding:40, color:G.muted, fontSize:13 }}>Loading products...</div>
         )}
 
+        {!loading && !supabase && (
+          <div style={{ textAlign:'center', padding:40, color:G.muted, fontSize:13 }}>Supabase is not configured yet. Add your environment values to load the catalog.</div>
+        )}
+
         {!loading && filtered.length === 0 && (
           <div style={{ textAlign:'center', padding:40, color:G.muted, fontSize:13 }}>No products in this category</div>
         )}
@@ -102,10 +111,10 @@ export default function Shop() {
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:6 }}>
                   <div style={{ flex:1 }}>
                     <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap', marginBottom:3 }}>
-                      <span style={{ fontSize:16, fontWeight:700 }}>{p.name}</span>
+                      <span style={{ fontSize:16, fontWeight:800 }}>{p.name}</span>
                       {_new && <span style={{ fontSize:8, background:'#FF4400', color:'#fff', padding:'1px 5px', borderRadius:8, fontWeight:800, flexShrink:0 }}>🆕 NEW</span>}
                     </div>
-                    <span style={{ fontSize:12, color:G.muted }}>{CAT_ICON[p.category]} {p.category}</span>
+                    <span style={{ fontSize:12, color:G.muted, fontWeight:600 }}>{CAT_ICON[p.category]} {p.category}</span>
                   </div>
                   <div style={{ fontSize:15, color:G.gold, fontWeight:700, marginLeft:8 }}>{p.price}</div>
                 </div>
@@ -126,7 +135,7 @@ export default function Shop() {
                 {/* WhatsApp Order Button */}
                 <a href={waOrderLink(p.name, WA_NUMBER)} target="_blank" rel="noreferrer"
                   className="premium-button"
-                  style={{ display:'block', textDecoration:'none', background:'linear-gradient(135deg, #2E6B4F, #1F4A36)', color:'#fff', textAlign:'center', padding:'11px', borderRadius:12, fontSize:14, fontWeight:700 }}>
+                  style={{ display:'block', textDecoration:'none', background:'linear-gradient(135deg, #2E6B4F, #1F4A36)', color:'#fff', textAlign:'center', padding:'11px', borderRadius:12, fontSize:14, fontWeight:800 }}>
                   💬 WhatsApp to Order — {p.price}
                 </a>
               </div>

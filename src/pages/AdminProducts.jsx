@@ -20,6 +20,10 @@ export default function AdminProducts() {
   const [copied, setCopied]     = useState('')
 
   const load = async () => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
     const { data } = await supabase.from('products').select('*').order('created_at', { ascending:false })
     setProducts(data || [])
     setLoading(false)
@@ -91,7 +95,7 @@ export default function AdminProducts() {
   const newCount = products.filter(p => isNew(p.created_at)).length
 
   return (
-    <div style={{ maxWidth:480, margin:'0 auto', padding:14 }}>
+    <div style={{ maxWidth:980, margin:'0 auto', padding:'18px 16px 28px', width:'100%' }}>
 
       {/* Notification */}
       {msg && (
@@ -102,50 +106,51 @@ export default function AdminProducts() {
       {view === 'list' && (
         <>
           {/* Stats */}
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8, marginBottom:14 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,minmax(0,1fr))', gap:10, marginBottom:16 }}>
             {[
               { l:'Total', v:products.length, c:G.gold },
               { l:'Available', v:products.filter(p=>p.is_available).length, c:G.green },
               { l:'🆕 NEW', v:newCount, c:'#FF4400' },
             ].map((s,i) => (
-              <div key={i} style={{ background:G.card, borderRadius:10, padding:12, textAlign:'center', border:`1px solid ${s.c}33` }}>
-                <div style={{ fontSize:22, fontWeight:800, color:s.c }}>{s.v}</div>
-                <div style={{ fontSize:9, color:G.muted }}>{s.l}</div>
+              <div key={i} style={{ background:'linear-gradient(135deg, rgba(20,20,20,0.95), rgba(12,12,12,0.95))', borderRadius:14, padding:'14px 12px', textAlign:'center', border:`1px solid ${s.c}33`, boxShadow:'0 8px 24px rgba(0,0,0,0.22)' }}>
+                <div style={{ fontSize:24, fontWeight:900, color:s.c }}>{s.v}</div>
+                <div style={{ fontSize:11, color:G.muted, marginTop:4, fontWeight:700 }}>{s.l}</div>
               </div>
             ))}
           </div>
 
           {/* Action buttons */}
-          <div style={{ display:'flex', gap:8, marginBottom:14 }}>
+          <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
             <button onClick={() => { setForm(BLANK); setEditing(null); setView('add') }}
-              style={{ flex:1, padding:'10px', borderRadius:10, border:`1px solid ${G.gold}`, background:`${G.gold}22`, color:G.gold, fontSize:12, fontWeight:700, cursor:'pointer' }}>
+              style={{ flex:'1 1 220px', padding:'12px 14px', borderRadius:12, border:`1px solid ${G.gold}`, background:`${G.gold}22`, color:G.gold, fontSize:14, fontWeight:800, cursor:'pointer' }}>
               ➕ Add Product
             </button>
             <button onClick={() => setView('export')}
-              style={{ flex:1, padding:'10px', borderRadius:10, border:`1px solid ${G.border}`, background:G.card, color:G.muted, fontSize:12, fontWeight:600, cursor:'pointer' }}>
+              style={{ flex:'1 1 220px', padding:'12px 14px', borderRadius:12, border:`1px solid ${G.border}`, background:G.card, color:G.muted, fontSize:14, fontWeight:700, cursor:'pointer' }}>
               📤 Export
             </button>
           </div>
 
           {/* Search + Cat filter */}
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Search..."
-            style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'9px 12px', color:G.text, fontSize:12, outline:'none', marginBottom:8, boxSizing:'border-box' }} />
-          <div style={{ display:'flex', gap:6, overflowX:'auto', marginBottom:14, scrollbarWidth:'none' }}>
+            style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:14, padding:'12px 14px', color:G.text, fontSize:14, outline:'none', marginBottom:10, boxSizing:'border-box' }} />
+          <div style={{ display:'flex', gap:8, overflowX:'auto', marginBottom:16, scrollbarWidth:'none', paddingBottom:4 }}>
             {['All',...CATS].map(c => (
               <button key={c} onClick={() => setCatFilter(c)}
-                style={{ flexShrink:0, padding:'4px 9px', borderRadius:16, border:`1px solid ${catFilter === c ? G.gold : G.border}`, background: catFilter === c ? `${G.gold}22` : G.card, color: catFilter === c ? G.gold : G.muted, fontSize:9, cursor:'pointer' }}>{c}</button>
+                style={{ flexShrink:0, padding:'6px 12px', borderRadius:999, border:`1px solid ${catFilter === c ? G.gold : G.border}`, background: catFilter === c ? `${G.gold}22` : G.card, color: catFilter === c ? G.gold : G.muted, fontSize:12, cursor:'pointer' }}>{c}</button>
             ))}
           </div>
 
           {/* Product list */}
           {loading && <div style={{ color:G.muted, textAlign:'center', padding:30 }}>Loading...</div>}
+          {!loading && !supabase && <div style={{ color:G.muted, textAlign:'center', padding:30 }}>Supabase is not configured. Connect your environment values to use the admin panel.</div>}
           {filtered.map(p => (
-            <div key={p.id} style={{ background:G.card, borderRadius:12, padding:'11px 13px', marginBottom:8, border:`1px solid ${p.is_available ? G.border : '#111'}`, opacity: p.is_available ? 1 : 0.5 }}>
+            <div key={p.id} style={{ background:'linear-gradient(135deg, rgba(20,20,20,0.95), rgba(12,12,12,0.95))', borderRadius:16, padding:'14px 15px', marginBottom:10, border:`1px solid ${p.is_available ? G.border : '#111'}`, opacity: p.is_available ? 1 : 0.7, boxShadow:'0 8px 24px rgba(0,0,0,0.22)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
                 <div style={{ flex:1 }}>
                   <div style={{ display:'flex', gap:5, alignItems:'center', flexWrap:'wrap', marginBottom:2 }}>
-                    <span style={{ fontSize:13 }}>{CAT_ICON[p.category]}</span>
-                    <span style={{ fontSize:12, fontWeight:600 }}>{p.name}</span>
+                    <span style={{ fontSize:15 }}>{CAT_ICON[p.category]}</span>
+                    <span style={{ fontSize:15, fontWeight:800 }}>{p.name}</span>
                     {isNew(p.created_at) && p.is_available && (
                       <span style={{ fontSize:7, background:'#FF4400', color:'#fff', padding:'1px 5px', borderRadius:6, fontWeight:800 }}>🆕 NEW</span>
                     )}
@@ -153,15 +158,15 @@ export default function AdminProducts() {
                       <span style={{ fontSize:7, background:'#333', color:'#666', padding:'1px 5px', borderRadius:6 }}>OUT OF STOCK</span>
                     )}
                   </div>
-                  <div style={{ fontSize:10, color:G.muted }}>{p.category} • <span style={{ color:G.gold }}>{p.price}</span> • {p.margin} margin</div>
+                  <div style={{ fontSize:12, color:G.muted, marginTop:4, fontWeight:600 }}>{p.category} • <span style={{ color:G.gold }}>{p.price}</span> • {p.margin} margin</div>
                 </div>
               </div>
               <div style={{ display:'flex', gap:6, marginTop:8 }}>
-                <button onClick={() => startEdit(p)} style={{ flex:1, padding:'6px', borderRadius:8, border:`1px solid ${G.border}`, background:'none', color:G.gold, fontSize:10, cursor:'pointer' }}>✏️ Edit</button>
-                <button onClick={() => toggleAvail(p)} style={{ flex:1, padding:'6px', borderRadius:8, border:`1px solid ${G.border}`, background:'none', color: p.is_available ? G.muted : G.green, fontSize:10, cursor:'pointer' }}>
+                <button onClick={() => startEdit(p)} style={{ flex:1, padding:'8px 10px', borderRadius:10, border:`1px solid ${G.border}`, background:'none', color:G.gold, fontSize:12, cursor:'pointer' }}>✏️ Edit</button>
+                <button onClick={() => toggleAvail(p)} style={{ flex:1, padding:'8px 10px', borderRadius:10, border:`1px solid ${G.border}`, background:'none', color: p.is_available ? G.muted : G.green, fontSize:12, cursor:'pointer' }}>
                   {p.is_available ? '❌ Mark OOS' : '✅ Mark Available'}
                 </button>
-                <button onClick={() => deleteProduct(p.id)} style={{ padding:'6px 10px', borderRadius:8, border:`1px solid #300`, background:'none', color:'#AA4444', fontSize:10, cursor:'pointer' }}>🗑️</button>
+                <button onClick={() => deleteProduct(p.id)} style={{ padding:'8px 10px', borderRadius:10, border:`1px solid #300`, background:'none', color:'#AA4444', fontSize:12, cursor:'pointer' }}>🗑️</button>
               </div>
             </div>
           ))}
@@ -171,10 +176,10 @@ export default function AdminProducts() {
       {/* View: ADD / EDIT */}
       {view === 'add' && (
         <>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-            <div style={{ fontSize:15, fontWeight:700 }}>{editing ? '✏️ Edit Product' : '➕ New Product'}</div>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:18 }}>
+            <div style={{ fontSize:18, fontWeight:800 }}>{editing ? '✏️ Edit Product' : '➕ New Product'}</div>
             <button onClick={() => { setView('list'); setForm(BLANK); setEditing(null) }}
-              style={{ background:'none', border:'none', color:G.muted, fontSize:11, cursor:'pointer' }}>← Back</button>
+              style={{ background:'none', border:'none', color:G.muted, fontSize:13, cursor:'pointer' }}>← Back</button>
           </div>
 
           {[
@@ -184,20 +189,20 @@ export default function AdminProducts() {
             { l:'Margin %', k:'margin', ph:'e.g. 50%', type:'text' },
             { l:'Image URL', k:'image_url', ph:'https://... (leave blank if no image)', type:'url' },
           ].map(f => (
-            <div key={f.k} style={{ marginBottom:12 }}>
-              <div style={{ fontSize:10, color:G.muted, marginBottom:5 }}>{f.l}</div>
+            <div key={f.k} style={{ marginBottom:14 }}>
+              <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>{f.l}</div>
               <input type={f.type} value={form[f.k] || ''} onChange={e => setForm({...form, [f.k]:e.target.value})}
                 placeholder={f.ph}
-                style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'10px 12px', color:G.text, fontSize:12, outline:'none', boxSizing:'border-box' }} />
+                style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:14, outline:'none', boxSizing:'border-box' }} />
             </div>
           ))}
 
-          <div style={{ marginBottom:12 }}>
-            <div style={{ fontSize:10, color:G.muted, marginBottom:7 }}>Category</div>
+          <div style={{ marginBottom:14 }}>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:8 }}>Category</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {CATS.map(c => (
                 <button key={c} onClick={() => setForm({...form, category:c})}
-                  style={{ padding:'5px 10px', borderRadius:14, border:`1px solid ${form.category===c ? G.gold : G.border}`, background: form.category===c ? `${G.gold}22` : G.card, color: form.category===c ? G.gold : G.muted, fontSize:10, cursor:'pointer', fontWeight: form.category===c ? 700 : 400 }}>
+                  style={{ padding:'7px 12px', borderRadius:999, border:`1px solid ${form.category===c ? G.gold : G.border}`, background: form.category===c ? `${G.gold}22` : G.card, color: form.category===c ? G.gold : G.muted, fontSize:12, cursor:'pointer', fontWeight: form.category===c ? 700 : 400 }}>
                   {CAT_ICON[c]} {c}
                 </button>
               ))}
@@ -205,26 +210,26 @@ export default function AdminProducts() {
           </div>
 
           <div style={{ marginBottom:16 }}>
-            <div style={{ fontSize:10, color:G.muted, marginBottom:5 }}>Description</div>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>Description</div>
             <textarea value={form.description || ''} onChange={e => setForm({...form, description:e.target.value})}
               placeholder="Short description (2-3 lines)"
-              rows={3}
-              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'10px 12px', color:G.text, fontSize:12, outline:'none', resize:'none', boxSizing:'border-box' }} />
+              rows={4}
+              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:14, outline:'none', resize:'vertical', boxSizing:'border-box' }} />
           </div>
 
           <div style={{ display:'flex', gap:8, marginBottom:8, alignItems:'center' }}>
             <input type="checkbox" checked={form.is_available} onChange={e => setForm({...form, is_available:e.target.checked})} id="avail" />
-            <label htmlFor="avail" style={{ fontSize:12, color:G.text, cursor:'pointer' }}>Available for sale</label>
+            <label htmlFor="avail" style={{ fontSize:14, color:G.text, cursor:'pointer' }}>Available for sale</label>
           </div>
 
           {!editing && (
-            <div style={{ background:'#0D1F15', borderRadius:8, padding:'9px 12px', marginBottom:14, borderLeft:`3px solid ${G.green}` }}>
-              <div style={{ fontSize:11, color:'#7CB87A' }}>🆕 Naya product auto-tagged NEW for 30 days on shop page + WhatsApp export.</div>
+            <div style={{ background:'#0D1F15', borderRadius:10, padding:'10px 12px', marginBottom:14, borderLeft:`3px solid ${G.green}` }}>
+              <div style={{ fontSize:13, color:'#7CB87A' }}>🆕 Naya product auto-tagged NEW for 30 days on shop page + WhatsApp export.</div>
             </div>
           )}
 
           <button onClick={saveProduct} disabled={saving || !form.name || !form.price}
-            style={{ width:'100%', padding:12, borderRadius:10, border:'none', background: form.name && form.price ? G.gold : G.card, color: form.name && form.price ? '#000' : G.muted, fontSize:13, fontWeight:800, cursor: form.name && form.price ? 'pointer' : 'default' }}>
+            style={{ width:'100%', padding:'13px 14px', borderRadius:12, border:'none', background: form.name && form.price ? G.gold : G.card, color: form.name && form.price ? '#000' : G.muted, fontSize:15, fontWeight:900, cursor: form.name && form.price ? 'pointer' : 'default' }}>
             {saving ? 'Saving...' : editing ? '✅ Update Product' : '➕ Add Product'}
           </button>
         </>

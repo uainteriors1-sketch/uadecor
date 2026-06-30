@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabase'
+import { supabase, isSupabaseConfigured } from './lib/supabase'
 import Shop from './pages/Shop'
 import Login from './pages/Login'
 import AdminProducts from './pages/AdminProducts'
@@ -43,6 +43,11 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null)
       setLoading(false)
@@ -61,6 +66,17 @@ export default function App() {
   if (loading) return (
     <div style={{ background:G.bg, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center' }}>
       <div style={{ color:G.gold, fontSize:13 }}>Loading UA Interiors...</div>
+    </div>
+  )
+
+  if (!isSupabaseConfigured) return (
+    <div style={{ background:G.bg, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <div style={{ maxWidth:420, background:G.card, border:`1px solid ${G.border}`, borderRadius:16, padding:24, textAlign:'center' }}>
+        <div style={{ color:G.gold, fontSize:14, fontWeight:700, marginBottom:8 }}>Supabase setup required</div>
+        <div style={{ color:G.text, fontSize:14, lineHeight:1.6 }}>
+          Add your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY values in the environment for this app, then refresh.
+        </div>
+      </div>
     </div>
   )
 

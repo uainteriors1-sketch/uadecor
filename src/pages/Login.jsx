@@ -12,6 +12,13 @@ export default function Login({ onLogin }) {
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true); setErr('')
+
+    if (!supabase) {
+      setErr('Supabase is not configured. Set your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY values first.')
+      setLoading(false)
+      return
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass })
     if (error) { setErr(error.message); setLoading(false); return }
     onLogin(data.user)
@@ -22,18 +29,18 @@ export default function Login({ onLogin }) {
       <div style={{ width:'100%', maxWidth:420, padding:'24px 18px' }}>
         <div style={{ textAlign:'center', marginBottom:30 }}>
           <div style={{ fontSize:9, color:G.gold, letterSpacing:3, marginBottom:6 }}>UA INTERIORS</div>
-          <div style={{ fontSize:28, fontWeight:800 }}>Admin Login</div>
-          <div style={{ fontSize:13, color:G.muted, marginTop:6 }}>Product & Order Management</div>
+          <div style={{ fontSize:28, fontWeight:900 }}>Admin Login</div>
+          <div style={{ fontSize:13, color:G.muted, marginTop:6, fontWeight:600 }}>Product & Order Management</div>
         </div>
 
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom:12 }}>
-            <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>Email</div>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:6, fontWeight:700 }}>Email</div>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@uainteriors.in"
               style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:15, outline:'none', boxSizing:'border-box' }} />
           </div>
           <div style={{ marginBottom:20 }}>
-            <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>Password</div>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:6, fontWeight:700 }}>Password</div>
             <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="••••••••"
               style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:15, outline:'none', boxSizing:'border-box' }} />
           </div>
@@ -45,7 +52,7 @@ export default function Login({ onLogin }) {
           )}
 
           <button type="submit" disabled={loading || !email || !pass}
-            style={{ width:'100%', padding:'13px 14px', borderRadius:12, border:'none', background: email && pass ? G.gold : G.card, color: email && pass ? '#000' : G.muted, fontSize:15, fontWeight:800, cursor: email && pass ? 'pointer' : 'default' }}>
+            style={{ width:'100%', padding:'13px 14px', borderRadius:12, border:'none', background: email && pass ? G.gold : G.card, color: email && pass ? '#000' : G.muted, fontSize:15, fontWeight:900, cursor: email && pass ? 'pointer' : 'default' }}>
             {loading ? 'Logging in...' : 'Login →'}
           </button>
         </form>

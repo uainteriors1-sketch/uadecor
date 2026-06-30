@@ -65,7 +65,7 @@ export default function App() {
   )
 
   return (
-    <div style={{ background:G.bg, minHeight:'100vh' }}>
+    <div style={{ background:G.bg, minHeight:'100vh', width:'100%' }}>
       <Routes>
         {/* PUBLIC SHOP */}
         <Route path="/" element={<Shop />} />

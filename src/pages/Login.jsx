@@ -19,39 +19,39 @@ export default function Login({ onLogin }) {
 
   return (
     <div style={{ background:G.bg, minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ width:'100%', maxWidth:360 }}>
+      <div style={{ width:'100%', maxWidth:420, padding:'24px 18px' }}>
         <div style={{ textAlign:'center', marginBottom:30 }}>
           <div style={{ fontSize:9, color:G.gold, letterSpacing:3, marginBottom:6 }}>UA INTERIORS</div>
-          <div style={{ fontSize:22, fontWeight:800 }}>Admin Login</div>
-          <div style={{ fontSize:11, color:G.muted, marginTop:4 }}>Product & Order Management</div>
+          <div style={{ fontSize:28, fontWeight:800 }}>Admin Login</div>
+          <div style={{ fontSize:13, color:G.muted, marginTop:6 }}>Product & Order Management</div>
         </div>
 
         <form onSubmit={handleLogin}>
           <div style={{ marginBottom:12 }}>
-            <div style={{ fontSize:10, color:G.muted, marginBottom:5 }}>Email</div>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>Email</div>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@uainteriors.in"
-              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'11px 13px', color:G.text, fontSize:13, outline:'none', boxSizing:'border-box' }} />
+              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:15, outline:'none', boxSizing:'border-box' }} />
           </div>
           <div style={{ marginBottom:20 }}>
-            <div style={{ fontSize:10, color:G.muted, marginBottom:5 }}>Password</div>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:6 }}>Password</div>
             <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="••••••••"
-              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:10, padding:'11px 13px', color:G.text, fontSize:13, outline:'none', boxSizing:'border-box' }} />
+              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:15, outline:'none', boxSizing:'border-box' }} />
           </div>
 
           {err && (
-            <div style={{ background:'#1A0000', border:'1px solid #440000', borderRadius:8, padding:'8px 12px', marginBottom:14, fontSize:12, color:'#FF8888' }}>
+            <div style={{ background:'#1A0000', border:'1px solid #440000', borderRadius:10, padding:'10px 12px', marginBottom:14, fontSize:13, color:'#FF8888' }}>
               {err}
             </div>
           )}
 
           <button type="submit" disabled={loading || !email || !pass}
-            style={{ width:'100%', padding:12, borderRadius:10, border:'none', background: email && pass ? G.gold : G.card, color: email && pass ? '#000' : G.muted, fontSize:14, fontWeight:800, cursor: email && pass ? 'pointer' : 'default' }}>
+            style={{ width:'100%', padding:'13px 14px', borderRadius:12, border:'none', background: email && pass ? G.gold : G.card, color: email && pass ? '#000' : G.muted, fontSize:15, fontWeight:800, cursor: email && pass ? 'pointer' : 'default' }}>
             {loading ? 'Logging in...' : 'Login →'}
           </button>
         </form>
 
         <div style={{ textAlign:'center', marginTop:20 }}>
-          <a href="/" style={{ color:G.muted, fontSize:11, textDecoration:'none' }}>← View Shop</a>
+          <a href="/" style={{ color:G.muted, fontSize:13, textDecoration:'none' }}>← View Shop</a>
         </div>
       </div>
     </div>

@@ -7,6 +7,20 @@ const CAT_ICON = { Murals:'🖼️', Mirrors:'🪞', Vases:'🏺', Art:'🎨', P
 
 const BLANK = { name:'', category:'Murals', price:'', description:'', supplier:'', margin:'', image_url:'', is_available:true }
 
+const sanitizeText = (value='') => value.replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim()
+
+const buildFallbackMetadata = (fileName, category) => {
+  const base = sanitizeText(fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9\s]/g,' '))
+  const words = base.split(' ').filter(Boolean)
+  const meaningful = words.filter(w => !['jpg','jpeg','png','webp','img','image','photo','product','decor','item','piece','modern','luxury','premium','home','interior','new'].includes(w.toLowerCase()))
+  const descriptor = meaningful.slice(0,3).join(' ') || 'Elegance'
+  const name = `${category} ${descriptor}`.trim()
+  return {
+    name: name.length > 55 ? `${name.slice(0, 52).trimEnd()}...` : name,
+    description: `Premium ${category.toLowerCase()} piece designed to add elegance and character to modern interiors.`
+  }
+}
+
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -18,6 +32,7 @@ export default function AdminProducts() {
   const [search, setSearch]     = useState('')
   const [catFilter, setCatFilter] = useState('All')
   const [copied, setCopied]     = useState('')
+  const [aiGenerating, setAiGenerating] = useState(false)
 
   const load = async () => {
     if (!supabase) {
@@ -59,6 +74,78 @@ export default function AdminProducts() {
   }
 
   const startEdit = (p) => { setForm(p); setEditing(p.id); setView('add') }
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const toDataUrl = (inputFile) => new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(inputFile)
+    })
+
+    setAiGenerating(true)
+    try {
+      const dataUrl = await toDataUrl(file)
+      setForm(prev => ({ ...prev, image_url: dataUrl }))
+
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+      let generated = null
+
+      if (apiKey) {
+        try {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method:'POST',
+            headers:{
+              'Content-Type':'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model:'gpt-4o-mini',
+              temperature:0.7,
+              max_tokens:180,
+              messages:[
+                { role:'system', content:'You are a premium interior decor catalog assistant. Return ONLY valid JSON with keys name and description.' },
+                { role:'user', content:[
+                  { type:'text', text:`Create a short premium product name and description for this interior decor product. Category: ${form.category || 'Decor'}. Keep the product name under 60 characters and the description under 140 characters. Return only JSON.` },
+                  { type:'image_url', image_url: { url: dataUrl } }
+                ] }
+              ]
+            })
+          })
+
+          const payload = await response.json()
+          const content = payload.choices?.[0]?.message?.content || ''
+          const cleaned = content.replace(/```json|```/g, '').trim()
+          if (cleaned) {
+            const parsed = JSON.parse(cleaned)
+            generated = {
+              name: parsed?.name?.trim() || '',
+              description: parsed?.description?.trim() || ''
+            }
+          }
+        } catch (aiErr) {
+          console.warn('AI image generation failed, using fallback text.', aiErr)
+        }
+      }
+
+      const fallback = buildFallbackMetadata(file.name, form.category || 'Decor')
+      setForm(prev => ({
+        ...prev,
+        name: generated?.name || prev.name || fallback.name,
+        description: generated?.description || prev.description || fallback.description,
+        image_url: dataUrl
+      }))
+      notify('✨ Product name and description generated from the image.')
+    } catch (err) {
+      console.error(err)
+      notify('Unable to process image right now.')
+    } finally {
+      setAiGenerating(false)
+    }
+  }
 
   const waExport = () => {
     const avail = products.filter(p => p.is_available)
@@ -196,6 +283,18 @@ export default function AdminProducts() {
                 style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'12px 14px', color:G.text, fontSize:14, outline:'none', boxSizing:'border-box' }} />
             </div>
           ))}
+
+          <div style={{ marginBottom:14 }}>
+            <div style={{ fontSize:12, color:G.muted, marginBottom:8 }}>Upload image to auto-generate title & description</div>
+            <input type="file" accept="image/*" onChange={handleImageUpload}
+              style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'10px 12px', color:G.text, fontSize:13, boxSizing:'border-box' }} />
+            {aiGenerating && <div style={{ fontSize:12, color:G.gold, marginTop:8 }}>🤖 Generating product details from the image...</div>}
+            {form.image_url && (
+              <div style={{ marginTop:10 }}>
+                <img src={form.image_url} alt="Product preview" style={{ width:'100%', maxHeight:220, objectFit:'cover', borderRadius:12, border:`1px solid ${G.border}` }} />
+              </div>
+            )}
+          </div>
 
           <div style={{ marginBottom:14 }}>
             <div style={{ fontSize:12, color:G.muted, marginBottom:8 }}>Category</div>

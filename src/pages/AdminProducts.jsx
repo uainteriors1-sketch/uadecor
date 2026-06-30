@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
-import { supabase, isNew } from '../lib/supabase'
+import { supabase, isNew, parseImageUrls, serializeImageUrls } from '../lib/supabase'
 
 const G = { bg:'#0C0C0C', gold:'#B8860B', border:'#1E1E1E', card:'#141414', text:'#E8E0D0', muted:'#555', green:'#2E6B4F', red:'#6B2D2D' }
 const CATS = ['Murals','Mirrors','Vases','Art','Plants','Fragrance','Frames','Soft Furnish','Lighting','Hardware']
 const CAT_ICON = { Murals:'🖼️', Mirrors:'🪞', Vases:'🏺', Art:'🎨', Plants:'🌿', Fragrance:'🕯️', Frames:'🖼️', 'Soft Furnish':'🛏️', Lighting:'💡', Hardware:'🔩' }
 
-const BLANK = { name:'', category:'Murals', price:'', description:'', supplier:'', margin:'', image_url:'', is_available:true }
+const BLANK = { name:'', category:'Murals', price:'', description:'', supplier:'', margin:'', image_url:'', gallery_images:[], is_available:true }
 
 const sanitizeText = (value='') => value.replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim()
 
@@ -34,6 +34,8 @@ export default function AdminProducts() {
   const [copied, setCopied]     = useState('')
   const [aiGenerating, setAiGenerating] = useState(false)
 
+  const previewImages = [form.image_url, ...(form.gallery_images || [])].filter(Boolean)
+
   const load = async () => {
     if (!supabase) {
       setLoading(false)
@@ -50,11 +52,16 @@ export default function AdminProducts() {
   const saveProduct = async () => {
     if (!form.name || !form.price) return
     setSaving(true)
+    const payload = {
+      ...form,
+      image_url: serializeImageUrls(form.image_url, form.gallery_images || []),
+    }
+    delete payload.gallery_images
     if (editing) {
-      await supabase.from('products').update(form).eq('id', editing)
+      await supabase.from('products').update(payload).eq('id', editing)
       notify('✅ Product updated!')
     } else {
-      await supabase.from('products').insert(form)
+      await supabase.from('products').insert(payload)
       notify('✅ Product added! 🆕 NEW badge automatic for 30 days.')
     }
     await load()
@@ -73,11 +80,16 @@ export default function AdminProducts() {
     notify('Product deleted.')
   }
 
-  const startEdit = (p) => { setForm(p); setEditing(p.id); setView('add') }
+  const startEdit = (p) => {
+    const images = parseImageUrls(p.image_url)
+    setForm({ ...p, image_url: images[0] || '', gallery_images: images.slice(1) })
+    setEditing(p.id)
+    setView('add')
+  }
 
   const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = Array.from(e.target.files || [])
+    if (!files.length) return
 
     const toDataUrl = (inputFile) => new Promise((resolve, reject) => {
       const reader = new FileReader()
@@ -88,13 +100,16 @@ export default function AdminProducts() {
 
     setAiGenerating(true)
     try {
-      const dataUrl = await toDataUrl(file)
-      setForm(prev => ({ ...prev, image_url: dataUrl }))
+      const dataUrls = await Promise.all(files.map(toDataUrl))
+      const primary = dataUrls[0] || ''
+      const gallery = dataUrls.slice(1)
+      const currentCategory = form.category || 'Decor'
+      setForm(prev => ({ ...prev, image_url: primary, gallery_images: gallery }))
 
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY
       let generated = null
 
-      if (apiKey) {
+      if (apiKey && primary) {
         try {
           const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method:'POST',
@@ -109,8 +124,8 @@ export default function AdminProducts() {
               messages:[
                 { role:'system', content:'You are a premium interior decor catalog assistant. Return ONLY valid JSON with keys name and description.' },
                 { role:'user', content:[
-                  { type:'text', text:`Create a short premium product name and description for this interior decor product. Category: ${form.category || 'Decor'}. Keep the product name under 60 characters and the description under 140 characters. Return only JSON.` },
-                  { type:'image_url', image_url: { url: dataUrl } }
+                  { type:'text', text:`Create a short premium product name and description for this interior decor product. Category: ${currentCategory}. Keep the product name under 60 characters and the description under 140 characters. Return only JSON.` },
+                  { type:'image_url', image_url: { url: primary } }
                 ] }
               ]
             })
@@ -131,14 +146,15 @@ export default function AdminProducts() {
         }
       }
 
-      const fallback = buildFallbackMetadata(file.name, form.category || 'Decor')
+      const fallback = buildFallbackMetadata(files[0].name, currentCategory)
       setForm(prev => ({
         ...prev,
         name: generated?.name || prev.name || fallback.name,
         description: generated?.description || prev.description || fallback.description,
-        image_url: dataUrl
+        image_url: primary,
+        gallery_images: gallery
       }))
-      notify('✨ Product name and description generated from the image.')
+      notify('✨ Product images attached and details generated.')
     } catch (err) {
       console.error(err)
       notify('Unable to process image right now.')
@@ -285,13 +301,17 @@ export default function AdminProducts() {
           ))}
 
           <div style={{ marginBottom:14 }}>
-            <div style={{ fontSize:12, color:G.muted, marginBottom:8 }}>Upload image to auto-generate title & description</div>
-            <input type="file" accept="image/*" onChange={handleImageUpload}
+            <div style={{ fontSize:12, color:G.muted, marginBottom:8 }}>Upload product images (main + gallery)</div>
+            <input type="file" accept="image/*" multiple onChange={handleImageUpload}
               style={{ width:'100%', background:G.card, border:`1px solid ${G.border}`, borderRadius:12, padding:'10px 12px', color:G.text, fontSize:13, boxSizing:'border-box' }} />
-            {aiGenerating && <div style={{ fontSize:12, color:G.gold, marginTop:8 }}>🤖 Generating product details from the image...</div>}
-            {form.image_url && (
-              <div style={{ marginTop:10 }}>
-                <img src={form.image_url} alt="Product preview" style={{ width:'100%', maxHeight:220, objectFit:'cover', borderRadius:12, border:`1px solid ${G.border}` }} />
+            {aiGenerating && <div style={{ fontSize:12, color:G.gold, marginTop:8 }}>🤖 Generating product details from the first image...</div>}
+            {previewImages.length > 0 && (
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:8, marginTop:10 }}>
+                {previewImages.map((src, idx) => (
+                  <div key={`${src}-${idx}`} style={{ borderRadius:12, overflow:'hidden', border:`1px solid ${G.border}`, background:G.card }}>
+                    <img src={src} alt={`Product preview ${idx + 1}`} style={{ width:'100%', height:120, objectFit:'cover', display:'block' }} />
+                  </div>
+                ))}
               </div>
             )}
           </div>

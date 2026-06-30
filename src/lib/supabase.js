@@ -6,6 +6,27 @@ const anon = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
 export const isSupabaseConfigured = Boolean(url && anon)
 export const supabase = isSupabaseConfigured ? createClient(url, anon) : null
 
+export const parseImageUrls = (imageValue = '') => {
+  if (!imageValue) return []
+  const raw = String(imageValue).trim()
+  if (!raw) return []
+  if (raw.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(raw)
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : []
+    } catch {
+      return []
+    }
+  }
+  return [raw]
+}
+
+export const serializeImageUrls = (primaryImage = '', galleryImages = []) => {
+  const urls = [primaryImage, ...(galleryImages || [])].filter(Boolean)
+  if (urls.length <= 1) return urls[0] || ''
+  return JSON.stringify(urls)
+}
+
 // Helper: days since a date
 export const daysSince = (dateStr) =>
   Math.floor((new Date() - new Date(dateStr)) / 86400000)
